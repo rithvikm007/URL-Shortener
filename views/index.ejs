@@ -26,10 +26,10 @@
                 </td>
                 <td>
                     <a
-                        href="http://localhost:8080/<%= url.shortUrl %>"
+                        href="/redirect/<%= encodeURIComponent( url.shortUrl) %>"
                         target="_blank"
                     >
-                        http://localhost:8080/<%= url.shortUrl %>
+                        <%= url.shortUrl %>
                     </a>
                 </td>
             </tr>
