@@ -26,3 +26,5 @@ const generateShortUrl = async () => {
 
     return shortUrl;
 };
+
+module.exports = generateShortUrl;

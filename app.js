@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
+require("dotenv").config();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -16,7 +17,7 @@ main()
     });
 
 async function main() {
-    await mongoose.connect("mongodb://127.0.0.1:27017/urlShortener");
+    await mongoose.connect(process.env.MONGODB_URL);
 }
 
 const port = 8080;
