@@ -34,7 +34,10 @@ router.post(
         }
         const userUrlsCount = await Url.countDocuments({ user: req.user._id });
         if (userUrlsCount >= process.env.USER_URL_LIMIT) {
-            req.flash("error", "You can only have a maximum of 5 URLs.");
+            req.flash(
+                "error",
+                `You can only have a maximum of ${process.env.USER_URL_LIMIT} URLs. Please delete some URLs before creating a new one.`
+            );
             return res.redirect("/show");
         }
         let url = await Url.findOne({ longUrl });
