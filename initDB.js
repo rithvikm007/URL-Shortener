@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 const Url = require("./models/url");
+const User = require("./models/user");
 
 main()
     .then(() => {
@@ -16,6 +17,7 @@ async function main() {
 
 const initDB = async () => {
     await Url.deleteMany({});
+    await User.deleteMany({});
     console.log("Database initialized");
 };
 

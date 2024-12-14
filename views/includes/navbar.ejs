@@ -1,0 +1,31 @@
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+    <div class="container-fluid">
+        <a href="/" class="navbar-brand"><i class="fa-solid fa-link"></i></a>
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavAltMarkup"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">Home</a>
+                <a href="/shorten" class="nav-link">Shorten a URL</a>
+                <% if(currUser){ %>
+                <a class="nav-link" href="/show">Track your Short URLs</a>
+                <% } %>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <% if(currUser){ %>
+                <a class="nav-link" href="/user/logout">Log out</a>
+                <% } %> <% if(!currUser){ %>
+
+                <a class="nav-link" href="/user/signup">Sign up</a>
+                <a class="nav-link" href="/user/login">Log in</a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</nav>

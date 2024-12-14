@@ -1,0 +1,36 @@
+<% layout("./layouts/boilerplate.ejs") %>
+
+<div
+    class="container d-flex flex-column justify-content-center align-items-center"
+    style="height: calc(100vh - 58px); overflow: hidden"
+>
+    <h1 class="text-center mb-4">URL Shortener</h1>
+
+    <form action="/shorten" method="POST" class="w-50 text-center">
+        <div class="mb-3">
+            <input
+                type="url"
+                name="longUrl"
+                class="form-control"
+                placeholder="Enter URL to shorten"
+                required
+            />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">
+            Shorten URL
+        </button>
+    </form>
+    <% if (shortUrl) { %>
+    <div class="result mt-4 text-center">
+        <p class="fs-5">
+            Your short URL:
+            <a
+                href="<%= shortUrl %>"
+                target="_blank"
+                class="text-decoration-underline"
+                ><%= shortUrl %></a
+            >
+        </p>
+    </div>
+    <% } %>
+</div>

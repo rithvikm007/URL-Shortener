@@ -1,0 +1,47 @@
+<% layout("./layouts/boilerplate.ejs") %>
+<div class="container mt-5">
+    <h1>Your Shortened URLs</h1>
+
+    <% if (urls && urls.length > 0) { %>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Long URL</th>
+                <th>Short URL</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% urls.forEach(url => { %>
+            <tr>
+                <td>
+                    <a href="<%= url.longUrl %>" target="_blank">
+                        <%= url.longUrl %>
+                    </a>
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/<%= url.shortUrl %>"
+                        target="_blank"
+                    >
+                        http://localhost:8080/<%= url.shortUrl %>
+                    </a>
+                </td>
+                <td>
+                    <form
+                        action="/<%= url.shortUrl %>?_method=DELETE"
+                        method="POST"
+                    >
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <p>No shortened URLs available.</p>
+    <% } %>
+</div>

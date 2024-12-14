@@ -1,0 +1,48 @@
+<% layout("./layouts/boilerplate.ejs") %>
+<div class="container mt-5">
+    <h1>Welcome to the URL Shortener</h1>
+    <p>
+        Shorten your long URLs and share them easily with our URL shortener
+        tool.
+    </p>
+    <p>Check out your shortened URLs <a href="/show">here</a>.</p>
+
+    <h3>Featured Links</h3>
+    <% if (topUrls && topUrls.length > 0) { %>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Long URL</th>
+                <th>Short URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% topUrls.forEach(url => { %>
+            <tr>
+                <td>
+                    <a href="<%= url.longUrl %>" target="_blank">
+                        <%= url.longUrl %>
+                    </a>
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/<%= url.shortUrl %>"
+                        target="_blank"
+                    >
+                        http://localhost:8080/<%= url.shortUrl %>
+                    </a>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <p>No featured URLs yet.</p>
+    <% } %>
+
+    <h3>Get Started</h3>
+    <p>
+        To shorten a URL, <a href="/shorten">click here</a> to go to the
+        shortening page.
+    </p>
+</div>
