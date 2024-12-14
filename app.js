@@ -43,6 +43,7 @@ app.use((req, res, next) => {
     res.locals.currUser = req.user;
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
+    app.locals.BACKEND_URL = process.env.BACKEND_URL;
     next();
 });
 
@@ -72,7 +73,7 @@ app.get("/", async (req, res) => {
         .limit(5)
         .select("longUrl shortUrl");
 
-    res.render("index", { topUrls }); // Render the new homepage with the featured URLs
+    res.render("index", { topUrls, BACKEND_URL: process.env.BACKEND_URL }); // Render the new homepage with the featured URLs
 });
 
 //Error Middleware

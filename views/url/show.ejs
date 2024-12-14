@@ -28,7 +28,7 @@
                         href="/redirect/<%= encodeURIComponent( url.shortUrl) %>"
                         target="_blank"
                     >
-                        <%= url.shortUrl %>
+                        <%=encodeURIComponent(url.shortUrl) %>
                     </a>
                 </td>
                 <td>
@@ -60,6 +60,10 @@
             <% }) %>
         </tbody>
     </table>
+    <p>
+        To use the short URL, just click on the short URL in the table above or
+        go to <b>"<%= BACKEND_URL %>/redirect/ + the short URL"</b>.
+    </p>
     <% } else { %>
     <p>No shortened URLs available.</p>
     <% } %>

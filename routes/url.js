@@ -161,7 +161,7 @@ router.get(
     })
 );
 
-// GET /top/:number
+//GET /top/:number
 router.get(
     "/top/:number",
     wrapAsync(async (req, res) => {
