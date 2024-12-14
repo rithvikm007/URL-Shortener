@@ -19,7 +19,7 @@ router.post("/shorten", async (req, res) => {
     let url = await Url.findOne({ longUrl });
     if (url) {
         res.render("url/index", {
-            shortUrl: `http://localhost:3000/${url.shortUrl}`,
+            shortUrl: `http://localhost:8080/${url.shortUrl}`,
         });
         return;
     }
@@ -38,11 +38,11 @@ router.post("/shorten", async (req, res) => {
     });
     await url.save();
     res.render("url/index", {
-        shortUrl: `http://localhost:8080/redirect/${shortUrl}`,
+        shortUrl: `http://localhost:8080/${shortUrl}`,
     });
 });
 
-router.get("/redirect/:shortUrl", async (req, res) => {
+router.get("/:shortUrl", async (req, res) => {
     const { shortUrl } = req.params;
     const existingUrl = await Url.findOne({ shortUrl });
     if (!existingUrl) {
@@ -62,10 +62,39 @@ router.get("/redirect/:shortUrl", async (req, res) => {
     existingUrl.lastAccessedAt = date;
     await existingUrl.save();
     if (existingUrl.hitCount % 10 === 0) {
-        const randomAdUrl = "https://www.google.com";
+        const randomAdUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         return res.redirect(randomAdUrl);
     }
     res.redirect(existingUrl.longUrl);
+});
+
+router.get("/details/:url", async (req, res) => {
+    const { url } = req.params;
+
+    const decodedUrl = decodeURIComponent(url);
+
+    let urlRecord;
+    if (decodedUrl.startsWith("http://localhost:8080/")) {
+        const shortUrl = decodedUrl.replace("http://localhost:8080/", "");
+        urlRecord = await Url.findOne({ shortUrl });
+    } else {
+        urlRecord = await Url.findOne({ longUrl: decodedUrl });
+    }
+
+    if (!urlRecord) {
+        return res.status(404).json({ message: "URL not found" });
+    }
+
+    res.json({ hitCount: urlRecord.hitCount });
+});
+router.get("/top/:number", async (req, res) => {
+    const { number } = req.params;
+    const topUrls = await Url.find()
+        .sort({ hitCount: -1 })
+        .limit(parseInt(number))
+        .select("longUrl shortUrl hitCount -_id");
+
+    res.json(topUrls);
 });
 
 module.exports = router;
