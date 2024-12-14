@@ -13,3 +13,12 @@ module.exports.saveRedirectUrl = (req, res, next) => {
     }
     next();
 };
+
+module.exports.isAdmin = (req, res, next) => {
+    if (req.isAuthenticated() && req.user.role === 'admin') {
+        return next();
+    } else {
+        req.flash('error', 'You do not have permission to access this page');
+        return res.redirect('/');
+    }
+};

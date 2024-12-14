@@ -4,12 +4,22 @@ const Url = require("../models/url");
 const User = require("../models/user");
 const generateShortUrl = require("../utils/generateShortUrl");
 const wrapAsync = require("../utils/wrapAsync");
-const { isLoggedIn } = require("../middleware");
+const { isLoggedIn, isAdmin } = require("../middleware");
 require("dotenv").config();
 
 router.get("/shorten", isLoggedIn, (req, res) => {
     res.render("url/shorten", { shortUrl: null });
 });
+
+router.get(
+    "/show/admin",
+    isAdmin,
+    wrapAsync(async (req, res) => {
+        const allUrls = await Url.find().populate("user");
+
+        res.render("admin/show", { urls: allUrls, user: req.user });
+    })
+);
 
 router.get(
     "/show",
@@ -27,7 +37,7 @@ router.post(
     wrapAsync(async (req, res) => {
         const { longUrl } = req.body;
         if (!req.body) {
-            res.render("url/index", {
+            res.render("url/shorten", {
                 shortUrl: null,
             });
             return;
@@ -42,8 +52,8 @@ router.post(
         }
         let url = await Url.findOne({ longUrl });
         if (url) {
-            res.render("url/index", {
-                shortUrl: `http://localhost:8080/${url.shortUrl}`,
+            res.render("url/shorten", {
+                shortUrl: `${url.shortUrl}`,
             });
             return;
         }
@@ -53,6 +63,7 @@ router.post(
             shortUrl = await generateShortUrl();
             urlExists = await Url.findOne({ shortUrl });
         }
+        shortUrl = "http://localhost:8080/" + shortUrl;
         url = new Url({
             longUrl,
             shortUrl,
@@ -65,16 +76,17 @@ router.post(
         await User.findByIdAndUpdate(req.user._id, {
             $push: { urls: url._id },
         });
-        res.render("url/index", {
-            shortUrl: `http://localhost:8080/${shortUrl}`,
+        res.render("url/shorten", {
+            shortUrl: `${shortUrl}`,
         });
     })
 );
 
 router.get(
-    "/:shortUrl",
+    "/redirect/:shortUrl",
     wrapAsync(async (req, res) => {
-        const { shortUrl } = req.params;
+        let { shortUrl } = req.params;
+        shortUrl = decodeURIComponent(shortUrl);
         const existingUrl = await Url.findOne({ shortUrl });
         if (!existingUrl) {
             req.flash("error", "URL not found");
@@ -105,7 +117,11 @@ router.delete(
     isLoggedIn,
     wrapAsync(async (req, res) => {
         const { shortUrl } = req.params;
-        const url = await Url.findOneAndDelete({ shortUrl });
+        const encodedShortUrl = req.body.encodedShortUrl; 
+
+        const decodedShortUrl = decodeURIComponent(encodedShortUrl);
+
+        const url = await Url.findOneAndDelete({ shortUrl: decodedShortUrl });
         if (!url) {
             req.flash("error", "URL not found");
             return res.redirect("show");
@@ -120,40 +136,47 @@ router.delete(
     })
 );
 
+// Route to display URL details
 router.get(
     "/details/:url",
-    isLoggedIn,
     wrapAsync(async (req, res) => {
         const { url } = req.params;
-
         const decodedUrl = decodeURIComponent(url);
 
-        let urlRecord;
-        if (decodedUrl.startsWith("http://localhost:8080/")) {
-            const shortUrl = decodedUrl.replace("http://localhost:8080/", "");
-            urlRecord = await Url.findOne({ shortUrl });
-        } else {
-            urlRecord = await Url.findOne({ longUrl: decodedUrl });
-        }
+        let urlRecord = await Url.findOne({ shortUrl: decodedUrl });
 
         if (!urlRecord) {
-            return res.status(404).json({ message: "URL not found" });
+            urlRecord = await Url.findOne({ longUrl: decodedUrl });
+        }
+        if (!urlRecord) {
+            return res.status(404).json({ error: "URL not found" });
         }
 
-        res.json({ hitCount: urlRecord.hitCount });
+        res.json({
+            longUrl: urlRecord.longUrl,
+            shortUrl: urlRecord.shortUrl,
+            hitCount: urlRecord.hitCount,
+        });
     })
 );
+
+// GET /top/:number
 router.get(
     "/top/:number",
-    isLoggedIn,
     wrapAsync(async (req, res) => {
         const { number } = req.params;
+
         const topUrls = await Url.find()
             .sort({ hitCount: -1 })
-            .limit(parseInt(number))
-            .select("longUrl shortUrl hitCount -_id");
+            .limit(Number(number));
 
-        res.json(topUrls);
+        const result = topUrls.map((url) => ({
+            longUrl: url.longUrl,
+            shortUrl: `http://localhost:8080/${url.shortUrl}`,
+            hitCount: url.hitCount,
+        }));
+
+        res.json(result);
     })
 );
 

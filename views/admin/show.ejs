@@ -1,0 +1,76 @@
+<% layout("./layouts/boilerplate.ejs") %>
+<div class="container mt-5">
+    <h1>Your Shortened URLs</h1>
+
+    <% if (urls && urls.length > 0) { %>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>User Id</th>
+                    <th>Username</th>
+                    <th>Long URL</th>
+                    <th>Short URL</th>
+                    <th>Hit Count</th>
+                    <th>Daily Hit Count</th>
+                    <th>Actions</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% urls.forEach(url => { %>
+                <tr>
+                    <td><%= url.user._id %></td>
+                    <td><%= url.user.username %></td>
+                    <td>
+                        <a href="<%= url.longUrl %>" target="_blank">
+                            <%= url.longUrl %>
+                        </a>
+                    </td>
+                    <td>
+                        <a
+                            href="/redirect/<%= encodeURIComponent( url.shortUrl) %>"
+                            target="_blank"
+                        >
+                            <%= url.shortUrl %>
+                        </a>
+                    </td>
+                    <td><%= url.hitCount %></td>
+                    <td><%= url.dailyHitCount %></td>
+                    <td>
+                        <form
+                            action="/<%= encodeURIComponent(url.shortUrl) %>?_method=DELETE"
+                            method="POST"
+                        >
+                            <input
+                                type="hidden"
+                                name="encodedShortUrl"
+                                value="<%= encodeURIComponent(url.shortUrl) %>"
+                            />
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form
+                            action="/details/<%= encodeURIComponent(url.shortUrl) %>"
+                            method="GET"
+                        >
+                            <button
+                                type="submit"
+                                class="btn btn-primary btn-sm"
+                            >
+                                Details
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <% } else { %>
+    <p>No shortened URLs available.</p>
+    <% } %>
+</div>
