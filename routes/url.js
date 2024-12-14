@@ -63,7 +63,8 @@ router.post(
             shortUrl = await generateShortUrl();
             urlExists = await Url.findOne({ shortUrl });
         }
-        shortUrl = "http://localhost:8080/" + shortUrl;
+        shortUrl = process.env.BACKEND_URL + "/" + shortUrl;
+
         url = new Url({
             longUrl,
             shortUrl,
@@ -117,7 +118,7 @@ router.delete(
     isLoggedIn,
     wrapAsync(async (req, res) => {
         const { shortUrl } = req.params;
-        const encodedShortUrl = req.body.encodedShortUrl; 
+        const encodedShortUrl = req.body.encodedShortUrl;
 
         const decodedShortUrl = decodeURIComponent(encodedShortUrl);
 
@@ -172,7 +173,7 @@ router.get(
 
         const result = topUrls.map((url) => ({
             longUrl: url.longUrl,
-            shortUrl: `http://localhost:8080/${url.shortUrl}`,
+            shortUrl: url.shortUrl,
             hitCount: url.hitCount,
         }));
 

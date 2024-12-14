@@ -3,6 +3,7 @@ require("dotenv").config();
 const Url = require("./models/url");
 const User = require("./models/user");
 const passportLocalMongoose = require("passport-local-mongoose");
+require("dotenv").config();
 
 main()
     .then(() => {
@@ -23,12 +24,12 @@ const initDB = async () => {
     console.log("Database initialized");
 
     const adminUser = new User({
-        email: "admin@example.com",
-        username: "admin",
+        email: process.env.ADMIN_EMAIL,
+        username: process.env.ADMIN_USERNAME,
         role: "admin",
     });
 
-    await adminUser.setPassword("adminPassword");
+    await adminUser.setPassword(process.env.ADMIN_PASSWORD);
 
     await adminUser.save();
     console.log("Admin user created");
