@@ -9,7 +9,6 @@ const DAILY_REQUEST_LIMIT = parseInt(
     10
 );
 const BACKEND_URL = process.env.BACKEND_URL;
-
 router.get("/shorten", (req, res) => {
     res.render("url/shorten", { shortUrl: null });
 });
