@@ -5,9 +5,6 @@ const path = require("path");
 const ejsMate = require("ejs-mate");
 const session = require("express-session");
 const flash = require("connect-flash");
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const User = require("./models/user");
 const Url = require("./models/url");
 const methodOverride = require("method-override");
 require("dotenv").config();
@@ -31,13 +28,7 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 app.use(flash());
 
-app.use(passport.initialize());
-app.use(passport.session());
 
-passport.use(new LocalStrategy(User.authenticate()));
-
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
     res.locals.currUser = req.user;
@@ -62,9 +53,7 @@ async function main() {
 const port = 8080;
 
 const urlRouter = require("./routes/url");
-const userRouter = require("./routes/user");
 app.use("/", urlRouter);
-app.use("/user", userRouter);
 
 app.get("/", async (req, res) => {
     // Fetch some featured URLs or top links if needed

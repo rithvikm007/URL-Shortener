@@ -1,61 +1,53 @@
 const express = require("express");
 const router = express.Router();
 const Url = require("../models/url");
-const User = require("../models/user");
 const generateShortUrl = require("../utils/generateShortUrl");
 const wrapAsync = require("../utils/wrapAsync");
-const { isLoggedIn, isAdmin } = require("../middleware");
 require("dotenv").config();
+const DAILY_REQUEST_LIMIT = parseInt(
+    process.env.DAILY_REQUEST_LIMIT || 100,
+    10
+);
+const BACKEND_URL = process.env.BACKEND_URL;
 
-router.get("/shorten", isLoggedIn, (req, res) => {
+router.get("/shorten", (req, res) => {
     res.render("url/shorten", { shortUrl: null });
 });
 
 router.get(
-    "/show/admin",
-    isAdmin,
-    wrapAsync(async (req, res) => {
-        const allUrls = await Url.find().populate("user");
-
-        res.render("admin/show", { urls: allUrls, user: req.user });
-    })
-);
-
-router.get(
     "/show",
-    isLoggedIn,
     wrapAsync(async (req, res) => {
-        const allUrls = await Url.find({ user: req.user._id });
-
-        res.render("url/show", { urls: allUrls, user: req.user });
+        const allUrls = await Url.find();
+        res.render("url/show", { urls: allUrls });
     })
 );
+
+const isValidUrl = (url) => {
+    try {
+        const parsedUrl = new URL(url);
+        return ["http:", "https:"].includes(parsedUrl.protocol);
+    } catch (err) {
+        return false;
+    }
+};
 
 router.post(
     "/shorten",
-    isLoggedIn,
     wrapAsync(async (req, res) => {
         const { longUrl } = req.body;
         if (!req.body) {
-            res.render("url/shorten", {
-                shortUrl: null,
-            });
+            res.status(500).json({ message: "Internal Server Error" });
             return;
         }
-        const userUrlsCount = await Url.countDocuments({ user: req.user._id });
-        if (userUrlsCount >= process.env.USER_URL_LIMIT) {
-            req.flash(
-                "error",
-                `You can only have a maximum of ${process.env.USER_URL_LIMIT} URLs. Please delete some URLs before creating a new one.`
-            );
-            return res.redirect("/show");
+        if (!isValidUrl(longUrl)) {
+            req.flash("error", "Invalid URL format.");
+            return res.redirect("/shorten");
         }
         let url = await Url.findOne({ longUrl });
         if (url) {
-            res.render("url/shorten", {
-                shortUrl: `${url.shortUrl}`,
-            });
-            return;
+            return res
+                .status(201)
+                .json({ shortUrl: `${BACKEND_URL}/${url.shortUrl}` });
         }
         let shortUrl;
         let urlExists = true;
@@ -63,7 +55,6 @@ router.post(
             shortUrl = await generateShortUrl();
             urlExists = await Url.findOne({ shortUrl });
         }
-        shortUrl = process.env.BACKEND_URL + "/" + shortUrl;
 
         url = new Url({
             longUrl,
@@ -71,15 +62,11 @@ router.post(
             hitCount: 0,
             dailyHitCount: 0,
             lastAccessedAt: new Date(),
-            user: req.user._id,
         });
         await url.save();
-        await User.findByIdAndUpdate(req.user._id, {
-            $push: { urls: url._id },
-        });
-        res.render("url/shorten", {
-            shortUrl: `${shortUrl}`,
-        });
+        return res
+            .status(201)
+            .json({ shortUrl: `${BACKEND_URL}/${url.shortUrl}` });
     })
 );
 
@@ -87,18 +74,20 @@ router.get(
     "/redirect/:shortUrl",
     wrapAsync(async (req, res) => {
         let { shortUrl } = req.params;
-        shortUrl = decodeURIComponent(shortUrl);
         const existingUrl = await Url.findOne({ shortUrl });
         if (!existingUrl) {
-            req.flash("error", "URL not found");
+            res.status(404).json({ error: "URL not found", code: 404 });
+
             return;
         }
         const date = new Date();
-        if (date.getDate() !== existingUrl.lastAccessedAt.getDate()) {
+        const lastReset = existingUrl.lastReset || existingUrl.lastAccessedAt;
+        if (Date.now() - new Date(lastReset).getTime() >= 24 * 60 * 60 * 1000) {
             existingUrl.dailyHitCount = 0;
+            existingUrl.lastReset = Date.now();
         }
-        if (existingUrl.dailyHitCount >= process.env.DAILY_REQUEST_LIMIT) {
-            res.status(429).send("Daily limit exceeded");
+        if (existingUrl.dailyHitCount >= DAILY_REQUEST_LIMIT) {
+            res.status(400).json({ message: "Limit exceeded" });
             return;
         }
         existingUrl.hitCount += 1;
@@ -113,49 +102,25 @@ router.get(
     })
 );
 
-router.delete(
-    "/:shortUrl",
-    isLoggedIn,
-    wrapAsync(async (req, res) => {
-        const { shortUrl } = req.params;
-        const encodedShortUrl = req.body.encodedShortUrl;
-
-        const decodedShortUrl = decodeURIComponent(encodedShortUrl);
-
-        const url = await Url.findOneAndDelete({ shortUrl: decodedShortUrl });
-        if (!url) {
-            req.flash("error", "URL not found");
-            return res.redirect("show");
-        }
-
-        await User.findByIdAndUpdate(req.user._id, {
-            $pull: { urls: url._id },
-        });
-
-        req.flash("success", "URL deleted successfully");
-        res.redirect("show");
-    })
-);
-
 // Route to display URL details
 router.get(
     "/details/:url",
     wrapAsync(async (req, res) => {
         const { url } = req.params;
-        const decodedUrl = decodeURIComponent(url);
 
-        let urlRecord = await Url.findOne({ shortUrl: decodedUrl });
+        let urlRecord = await Url.findOne({ shortUrl: url });
 
         if (!urlRecord) {
-            urlRecord = await Url.findOne({ longUrl: decodedUrl });
+            urlRecord = await Url.findOne({ longUrl: decodeURIComponent(url) });
         }
+
         if (!urlRecord) {
             return res.status(404).json({ error: "URL not found" });
         }
 
         res.json({
             longUrl: urlRecord.longUrl,
-            shortUrl: urlRecord.shortUrl,
+            shortUrl: `${process.env.BACKEND_URL}/redirect/${urlRecord.shortUrl}`,
             hitCount: urlRecord.hitCount,
         });
     })
@@ -165,7 +130,10 @@ router.get(
 router.get(
     "/top/:number",
     wrapAsync(async (req, res) => {
-        const { number } = req.params;
+        const number = Math.min(
+            Math.max(parseInt(req.params.number, 10), 1),
+            100
+        );
 
         const topUrls = await Url.find()
             .sort({ hitCount: -1 })
@@ -173,11 +141,43 @@ router.get(
 
         const result = topUrls.map((url) => ({
             longUrl: url.longUrl,
-            shortUrl: url.shortUrl,
+            shortUrl: `${process.env.BACKEND_URL}/redirect/${url.shortUrl}`,
             hitCount: url.hitCount,
         }));
 
         res.json(result);
+    })
+);
+
+router.get(
+    "/:shortUrl",
+    wrapAsync(async (req, res) => {
+        let { shortUrl } = req.params;
+        const existingUrl = await Url.findOne({ shortUrl });
+        if (!existingUrl) {
+            res.status(404).json({ error: "URL not found", code: 404 });
+
+            return;
+        }
+        const date = new Date();
+        const lastReset = existingUrl.lastReset || existingUrl.lastAccessedAt;
+        if (Date.now() - new Date(lastReset).getTime() >= 24 * 60 * 60 * 1000) {
+            existingUrl.dailyHitCount = 0;
+            existingUrl.lastReset = Date.now();
+        }
+        if (existingUrl.dailyHitCount >= DAILY_REQUEST_LIMIT) {
+            res.status(400).json({ message: "Limit exceeded" });
+            return;
+        }
+        existingUrl.hitCount += 1;
+        existingUrl.dailyHitCount += 1;
+        existingUrl.lastAccessedAt = date;
+        await existingUrl.save();
+        if (existingUrl.hitCount % 10 === 0) {
+            const randomAdUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+            return res.redirect(randomAdUrl);
+        }
+        res.redirect(existingUrl.longUrl);
     })
 );
 

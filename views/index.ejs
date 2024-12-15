@@ -5,7 +5,7 @@
         Shorten your long URLs and share them easily with our URL shortener
         tool.
     </p>
-    <p>Check out your shortened URLs <a href="/show">here</a>.</p>
+    <p>Check out all available shortened URLs <a href="/show">here</a>.</p>
 
     <h3>Featured Links</h3>
     <% if (topUrls && topUrls.length > 0) { %>
@@ -26,22 +26,18 @@
                 </td>
                 <td>
                     <a
-                        href="/redirect/<%= encodeURIComponent( url.shortUrl) %>"
+                        href="<%= `${BACKEND_URL}/redirect/${url.shortUrl}` %>"
                         target="_blank"
                     >
-                        <%= encodeURIComponent(url.shortUrl) %>
+                        <%= `${BACKEND_URL}/redirect/${url.shortUrl}` %>
                     </a>
                 </td>
             </tr>
             <% }) %>
         </tbody>
     </table>
-    <p>
-        To use the short URL, just click on the short URL in the table above or
-        go to <b>"<%= BACKEND_URL %>/redirect/ + the short URL"</b>.
-    </p>
     <% } else { %>
-    <p>No featured URLs yet.</p>
+    <p>No featured URLs available.</p>
     <% } %>
 
     <h3>Get Started</h3>
