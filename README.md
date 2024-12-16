@@ -50,7 +50,7 @@ A URL shortener backend built with Node.js, Express, and MongoDB. This project e
    npm start
    ```
 
-5. Access the application at [http://localhost:8080](http://localhost:8080).
+5. Access the application at [http://localhost:3000](http://localhost:3000).
 
 ## Endpoints
 
