@@ -79,7 +79,7 @@ router.get(
 
         const now = new Date();
         const currentDay = getDateMonthYear(now.getTime());
-        console.log(currentDay);
+        // console.log(currentDay);
         if (
             existingUrl.currentDate.day !== currentDay.day ||
             existingUrl.currentDate.month !== currentDay.month ||
