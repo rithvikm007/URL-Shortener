@@ -3,6 +3,7 @@ const router = express.Router();
 const Url = require("../models/url");
 const generateShortUrl = require("../utils/generateShortUrl");
 const wrapAsync = require("../utils/wrapAsync");
+const getDateMonthYear = require("../utils/getDateMonthYear");
 require("dotenv").config();
 const DAILY_REQUEST_LIMIT = parseInt(
     process.env.DAILY_REQUEST_LIMIT || 100,
@@ -58,9 +59,6 @@ router.post(
         url = new Url({
             longUrl,
             shortUrl,
-            hitCount: 0,
-            dailyHitCount: 0,
-            lastAccessedAt: new Date(),
         });
         await url.save();
         return res
@@ -72,31 +70,40 @@ router.post(
 router.get(
     "/redirect/:shortUrl",
     wrapAsync(async (req, res) => {
-        let { shortUrl } = req.params;
+        const { shortUrl } = req.params;
         const existingUrl = await Url.findOne({ shortUrl });
-        if (!existingUrl) {
-            res.status(404).json({ error: "URL not found", code: 404 });
 
-            return;
+        if (!existingUrl) {
+            return res.status(404).json({ error: "URL not found", code: 404 });
         }
-        const date = new Date();
-        const lastReset = existingUrl.lastReset || existingUrl.lastAccessedAt;
-        if (Date.now() - new Date(lastReset).getTime() >= 24 * 60 * 60 * 1000) {
+
+        const now = new Date();
+        const currentDay = getDateMonthYear(now.getTime());
+        console.log(currentDay);
+        if (
+            existingUrl.currentDate.day !== currentDay.day ||
+            existingUrl.currentDate.month !== currentDay.month ||
+            existingUrl.currentDate.year !== currentDay.year
+        ) {
             existingUrl.dailyHitCount = 0;
-            existingUrl.lastReset = Date.now();
+            existingUrl.currentDate = currentDay;
         }
+
         if (existingUrl.dailyHitCount >= DAILY_REQUEST_LIMIT) {
-            res.status(400).json({ message: "Limit exceeded" });
-            return;
+            return res.status(400).json({ message: "Limit exceeded" });
         }
+
         existingUrl.hitCount += 1;
         existingUrl.dailyHitCount += 1;
-        existingUrl.lastAccessedAt = date;
+        existingUrl.lastAccessedAt = new Date().toISOString();
+
         await existingUrl.save();
+
         if (existingUrl.hitCount % 10 === 0) {
             const randomAdUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
             return res.redirect(randomAdUrl);
         }
+
         res.redirect(existingUrl.longUrl);
     })
 );
@@ -151,31 +158,40 @@ router.get(
 router.get(
     "/:shortUrl",
     wrapAsync(async (req, res) => {
-        let { shortUrl } = req.params;
+        const { shortUrl } = req.params;
         const existingUrl = await Url.findOne({ shortUrl });
-        if (!existingUrl) {
-            res.status(404).json({ error: "URL not found", code: 404 });
 
-            return;
+        if (!existingUrl) {
+            return res.status(404).json({ error: "URL not found", code: 404 });
         }
-        const date = new Date();
-        const lastReset = existingUrl.lastReset || existingUrl.lastAccessedAt;
-        if (Date.now() - new Date(lastReset).getTime() >= 24 * 60 * 60 * 1000) {
+
+        const now = new Date();
+        const currentDay = getDateMonthYear(now.getTime());
+
+        if (
+            existingUrl.currentDate.day !== currentDay.day ||
+            existingUrl.currentDate.month !== currentDay.month ||
+            existingUrl.currentDate.year !== currentDay.year
+        ) {
             existingUrl.dailyHitCount = 0;
-            existingUrl.lastReset = Date.now();
+            existingUrl.currentDate = currentDay;
         }
+
         if (existingUrl.dailyHitCount >= DAILY_REQUEST_LIMIT) {
-            res.status(400).json({ message: "Limit exceeded" });
-            return;
+            return res.status(400).json({ message: "Limit exceeded" });
         }
+
         existingUrl.hitCount += 1;
         existingUrl.dailyHitCount += 1;
-        existingUrl.lastAccessedAt = date;
+        existingUrl.lastAccessedAt = new Date().toISOString();
+
         await existingUrl.save();
+
         if (existingUrl.hitCount % 10 === 0) {
             const randomAdUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
             return res.redirect(randomAdUrl);
         }
+
         res.redirect(existingUrl.longUrl);
     })
 );

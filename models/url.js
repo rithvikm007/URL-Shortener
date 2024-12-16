@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const getDateMonthYear = require("../utils/getDateMonthYear");
 
 const urlSchema = new Schema(
     {
@@ -7,11 +8,13 @@ const urlSchema = new Schema(
             type: String,
             required: true,
             unique: true,
+            index: true, // Index for faster lookups
         },
         shortUrl: {
             type: String,
             required: true,
             unique: true,
+            index: true, // Index for faster lookups
         },
         hitCount: {
             type: Number,
@@ -23,14 +26,15 @@ const urlSchema = new Schema(
             default: 0,
             required: true,
         },
-        lastAccessedAt: {
-            type: Date,
-            default: () => new Date(),
+        currentDate: {
+            type: Object,
+            default: () => getDateMonthYear(),
             required: true,
         },
     },
     { timestamps: true }
 );
+
 const Url = mongoose.model("Url", urlSchema);
 
 module.exports = Url;
