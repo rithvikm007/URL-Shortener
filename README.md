@@ -6,7 +6,7 @@ A URL shortener backend built with Node.js, Express, and MongoDB. This project e
 
 - **Shorten URLs**: Convert long URLs into short, shareable links.
 - **Redirection**: Automatically redirect to the original URL when a short link is accessed.
-- **Daily Request Limits**: Enforce a configurable daily request limit for individual short URLs.
+- **Daily Request Limits**: Enforce a configurable daily request limit for individual short URLs. (Note: The daily hit count resets every day at UTC.)
 - **Analytics**:
   - Total and daily hit counts for each URL.
   - Track the most accessed URLs.
@@ -77,7 +77,7 @@ Create a new shortened URL.
 ### **GET /show**
 Render a page displaying all shortened URLs.
 
-### **GET /redirect/:shortUrl**
+### **GET /redirect/:shortUrl** or **GET /:shortUrl**
 Redirect to the original URL for a given short URL.
 
 ### **GET /details/:url**
@@ -105,9 +105,6 @@ Retrieve the top N most accessed URLs.
     }
   ]
   ```
-
-### **GET /:shortUrl**
-Redirect to the original URL and handle analytics and daily limits.
 
 ## Project Structure
 
