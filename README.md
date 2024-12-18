@@ -38,7 +38,7 @@ A URL shortener backend built with Node.js, Express, and MongoDB. This project e
 3. Create a `.env` file in the root directory and configure the following variables:
 
    ```env
-   BACKEND_URL=http://localhost:3000  # Replace with your backend URL
+   BACKEND_URL=http://localhost:8080  # Can adjust the port by changing its value in app.js
    DAILY_REQUEST_LIMIT=100           # Adjust as needed
    MONGO_URI=mongodb://localhost:27017/urlShortener
    SESSION_SECRET=your_secret_key    # Secret key for session management
@@ -50,7 +50,7 @@ A URL shortener backend built with Node.js, Express, and MongoDB. This project e
    npm start
    ```
 
-5. Access the application at [http://localhost:3000](http://localhost:3000).
+5. Access the application at [http://localhost:8080](http://localhost:8080).
 
 ## Endpoints
 
