@@ -25,8 +25,8 @@ A URL shortener backend built with Node.js, Express, and MongoDB. This project e
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone "https://github.com/rithvikm007/URL-Shortener.git"
+   cd URL-Shortener
    ```
 
 2. Install dependencies:
